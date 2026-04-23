@@ -1,4 +1,12 @@
-export function EmptyState() {
+type EmptyStateContext = "library" | "folder" | "unfiled";
+
+const copy: Record<EmptyStateContext, string> = {
+  library: "Upload your first video to get started",
+  folder: "No videos in this folder yet",
+  unfiled: "Everything is filed - drop a video here or pick a folder",
+};
+
+export function EmptyState({ context = "library" }: { context?: EmptyStateContext }) {
   return (
     <div
       data-testid="library-empty-state"
@@ -13,7 +21,7 @@ export function EmptyState() {
         className="h-32 w-auto"
       />
       <p className="text-base font-medium text-foreground">
-        Upload your first video to get started
+        {copy[context]}
       </p>
     </div>
   );

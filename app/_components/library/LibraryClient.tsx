@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useState, useTransition } from "react";
+import type { FolderFilter, FolderSidebarDTO } from "@/app/_lib/folders/dto";
 import type { VideoListItemDTO } from "@/app/_lib/videos/library";
 import type {
   LibrarySort,
@@ -12,6 +13,7 @@ import { ContextMenuItem } from "./ContextMenu";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { DescriptionModal } from "./DescriptionModal";
 import { EmptyState } from "./EmptyState";
+import { FolderCombobox } from "./FolderCombobox";
 import { LibraryHeader } from "./LibraryHeader";
 import { RenameField } from "./RenameField";
 import { VideoCard } from "./VideoCard";
@@ -23,15 +25,24 @@ type Props = {
   initialItems: VideoListItemDTO[];
   initialView: LibraryView;
   initialSort: LibrarySort;
+  folders?: FolderSidebarDTO[];
+  folderFilter?: FolderFilter;
 };
 
-export function LibraryClient({ initialItems, initialView, initialSort }: Props) {
+export function LibraryClient({
+  initialItems,
+  initialView,
+  initialSort,
+  folders = [],
+  folderFilter = { kind: "all" },
+}: Props) {
   const router = useRouter();
   const [items, setItems] = useState<VideoListItemDTO[]>(initialItems);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [descriptionTarget, setDescriptionTarget] =
     useState<VideoListItemDTO | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<VideoListItemDTO | null>(null);
+  const [moveTarget, setMoveTarget] = useState<VideoListItemDTO | null>(null);
   const [, startTransition] = useTransition();
 
   const updateItem = useCallback(
@@ -83,6 +94,11 @@ export function LibraryClient({ initialItems, initialView, initialSort }: Props)
         onSelect: () => setDescriptionTarget(item),
       },
       {
+        key: "move",
+        label: "Move to folder",
+        onSelect: () => setMoveTarget(item),
+      },
+      {
         key: "delete",
         label: "Delete",
         destructive: true,
@@ -120,7 +136,15 @@ export function LibraryClient({ initialItems, initialView, initialSort }: Props)
     >
       <LibraryHeader view={initialView} sort={initialSort} />
       {items.length === 0 ? (
-        <EmptyState />
+        <EmptyState
+          context={
+            folderFilter.kind === "folder"
+              ? "folder"
+              : folderFilter.kind === "unfiled"
+                ? "unfiled"
+                : "library"
+          }
+        />
       ) : initialView === "grid" ? (
         <VideoGrid>
           {items.map((item) => (
@@ -165,6 +189,18 @@ export function LibraryClient({ initialItems, initialView, initialSort }: Props)
           onClose={() => setDeleteTarget(null)}
           onDeleted={() => {
             removeItem(deleteTarget.id);
+            router.refresh();
+          }}
+        />
+      )}
+      {moveTarget && (
+        <FolderCombobox
+          videoId={moveTarget.id}
+          currentFolderId={moveTarget.folderId}
+          folders={folders}
+          onClose={() => setMoveTarget(null)}
+          onAssigned={(folderId) => {
+            updateItem(moveTarget.id, { folderId });
             router.refresh();
           }}
         />
