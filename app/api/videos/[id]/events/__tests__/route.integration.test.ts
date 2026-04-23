@@ -72,7 +72,7 @@ describe("GET /api/videos/:id/events", () => {
     const user = await makeUser("a@example.com");
     const video = await makeVideo(user.id);
     const GET = await importGet();
-    const req = new Request(`http://localhost:3001/api/videos/${video.id}/events`);
+    const req = new Request(`http://localhost:3000/api/videos/${video.id}/events`);
     const res = await GET(req, { params: Promise.resolve({ id: video.id }) });
     expect(res.status).toBe(404);
     expect((await res.json()).code).toBe("EVENTS_NOT_FOUND");
@@ -84,7 +84,7 @@ describe("GET /api/videos/:id/events", () => {
     const video = await makeVideo(a.id);
     await signInAs(b.id);
     const GET = await importGet();
-    const req = new Request(`http://localhost:3001/api/videos/${video.id}/events`);
+    const req = new Request(`http://localhost:3000/api/videos/${video.id}/events`);
     const res = await GET(req, { params: Promise.resolve({ id: video.id }) });
     expect(res.status).toBe(404);
   });
@@ -97,7 +97,7 @@ describe("GET /api/videos/:id/events", () => {
 
     const controller = new AbortController();
     const req = new Request(
-      `http://localhost:3001/api/videos/${video.id}/events`,
+      `http://localhost:3000/api/videos/${video.id}/events`,
       { signal: controller.signal },
     );
     const res = await GET(req, { params: Promise.resolve({ id: video.id }) });

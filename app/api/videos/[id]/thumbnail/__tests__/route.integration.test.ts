@@ -76,7 +76,7 @@ async function importGet() {
 }
 
 function buildRequest(id: string): NextRequest {
-  return new NextRequest(new Request(`http://localhost:3001/api/videos/${id}/thumbnail`));
+  return new NextRequest(new Request(`http://localhost:3000/api/videos/${id}/thumbnail`));
 }
 
 describe("GET /api/videos/[id]/thumbnail", () => {

@@ -40,7 +40,7 @@ function buildRequest(opts: {
   const params = new URLSearchParams();
   if (opts.name != null) params.set("name", opts.name);
   if (opts.size != null) params.set("size", opts.size);
-  const url = `http://localhost:3001/api/videos${params.toString() ? `?${params}` : ""}`;
+  const url = `http://localhost:3000/api/videos${params.toString() ? `?${params}` : ""}`;
   const headers = new Headers();
   headers.set("content-type", opts.contentType ?? "application/octet-stream");
   if (opts.contentLength != null) {

@@ -50,7 +50,7 @@ async function importPost() {
 }
 
 function buildRequest(id: string): Request {
-  return new Request(`http://localhost:3001/api/videos/${id}/retry`, {
+  return new Request(`http://localhost:3000/api/videos/${id}/retry`, {
     method: "POST",
   });
 }
