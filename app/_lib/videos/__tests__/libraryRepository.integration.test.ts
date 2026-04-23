@@ -139,6 +139,27 @@ describe("libraryRepository - listByUser", () => {
       perFolder: { [folder.id]: 1 },
     });
   });
+
+  it("list_by_user_folder_filter_combines_with_tag_filter_using_AND", async () => {
+    const owner = await makeUser("folder-and");
+    const folder = await prisma.folder.create({
+      data: { userId: owner.id, name: "Courses" },
+    });
+    await seedVideo(owner.id, "ready-filed", {
+      folderId: folder.id,
+      status: "ready",
+    });
+    await seedVideo(owner.id, "failed-filed", {
+      folderId: folder.id,
+      status: "failed",
+    });
+    await seedVideo(owner.id, "ready-unfiled", { status: "ready" });
+    const rows = await listByUser(owner.id, "recent", {
+      folderFilter: { kind: "folder", folderId: folder.id },
+      tagFilter: { status: "ready" },
+    });
+    expect(rows.map((row) => row.title)).toEqual(["ready-filed"]);
+  });
 });
 
 describe("libraryRepository - mutations", () => {

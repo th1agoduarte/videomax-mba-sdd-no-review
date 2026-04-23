@@ -21,7 +21,7 @@ function orderByForSort(sort: LibrarySort): Prisma.VideoOrderByWithRelationInput
 
 export type LibraryListFilters = {
   folderFilter?: FolderFilter;
-  tagFilter?: unknown;
+  tagFilter?: Prisma.VideoWhereInput;
 };
 
 function whereForFilters(
@@ -35,6 +35,9 @@ function whereForFilters(
   }
   if (folderFilter?.kind === "folder") {
     where.folderId = folderFilter.folderId;
+  }
+  if (filters.tagFilter) {
+    where.AND = [filters.tagFilter];
   }
   return where;
 }

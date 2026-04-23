@@ -1,6 +1,7 @@
 import type { VideoStatus } from "./status";
 import type { LibrarySort } from "./libraryValidation";
 import type { FolderFilter } from "@/app/_lib/folders/dto";
+import type { Prisma } from "@prisma/client";
 import { listByUser } from "./libraryRepository";
 
 export type VideoListItemDTO = {
@@ -59,7 +60,7 @@ export function toVideoListItemDTO(row: VideoRowLike): VideoListItemDTO {
 export async function listVideosForUser(
   userId: string,
   sort: LibrarySort,
-  filters: { folderFilter?: FolderFilter; tagFilter?: unknown } = {},
+  filters: { folderFilter?: FolderFilter; tagFilter?: Prisma.VideoWhereInput } = {},
 ): Promise<VideoListItemDTO[]> {
   const rows = await listByUser(userId, sort, filters);
   return rows.map(toVideoListItemDTO);
