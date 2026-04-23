@@ -22,6 +22,7 @@ model User {
   sessions     Session[]
   videos       Video[]
   videoEvents  VideoEvent[]
+  folders      Folder[]
 
   @@map("user")
 }
@@ -38,9 +39,11 @@ model Video {
   storagePath           String                 @map("storage_path") @db.VarChar(512)
   thumbnailPath         String?                @map("thumbnail_path") @db.VarChar(512)
   status                String                 @default("validating") @db.VarChar(16)
+  folderId              String?                @map("folder_id")
   createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt             DateTime               @updatedAt @map("updated_at") @db.Timestamptz(6)
   user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder                Folder?                @relation(fields: [folderId], references: [id], onDelete: SetNull)
   job                   VideoJob?
   transcription         Transcription?
   transcriptionSegments TranscriptionSegment[]
@@ -48,8 +51,22 @@ model Video {
   events                VideoEvent[]
 
   @@index([userId, createdAt(sort: Desc)], map: "ix_video_user_id_created_at")
+  @@index([userId, folderId, createdAt(sort: Desc)], map: "ix_video_user_folder_created")
   @@index([status], map: "ix_video_status")
   @@map("video")
+}
+
+model Folder {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  name      String   @db.VarChar(80)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videos    Video[]
+
+  @@index([userId, name], map: "ix_folder_user_id_name")
+  @@map("folder")
 }
 
 model VideoJob {

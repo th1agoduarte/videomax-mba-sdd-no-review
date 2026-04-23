@@ -1,5 +1,6 @@
 import type { Prisma, Video } from "@prisma/client";
 import { prisma } from "@/app/_lib/db";
+import type { FolderFilter } from "@/app/_lib/folders/dto";
 import {
   type LibrarySort,
   type LibraryView,
@@ -18,14 +19,60 @@ function orderByForSort(sort: LibrarySort): Prisma.VideoOrderByWithRelationInput
   }
 }
 
+export type LibraryListFilters = {
+  folderFilter?: FolderFilter;
+  tagFilter?: unknown;
+};
+
+function whereForFilters(
+  userId: string,
+  filters: LibraryListFilters = {},
+): Prisma.VideoWhereInput {
+  const where: Prisma.VideoWhereInput = { userId };
+  const folderFilter = filters.folderFilter;
+  if (folderFilter?.kind === "unfiled") {
+    where.folderId = null;
+  }
+  if (folderFilter?.kind === "folder") {
+    where.folderId = folderFilter.folderId;
+  }
+  return where;
+}
+
 export async function listByUser(
   userId: string,
   sort: LibrarySort,
+  filters: LibraryListFilters = {},
 ): Promise<Video[]> {
   return prisma.video.findMany({
-    where: { userId },
+    where: whereForFilters(userId, filters),
     orderBy: orderByForSort(sort),
   });
+}
+
+export async function countForAllFilters(userId: string): Promise<{
+  all: number;
+  unfiled: number;
+  perFolder: Record<string, number>;
+}> {
+  const grouped = await prisma.video.groupBy({
+    by: ["folderId"],
+    where: { userId },
+    _count: { _all: true },
+  });
+
+  const perFolder: Record<string, number> = {};
+  let all = 0;
+  let unfiled = 0;
+  for (const row of grouped) {
+    all += row._count._all;
+    if (row.folderId === null) {
+      unfiled = row._count._all;
+    } else {
+      perFolder[row.folderId] = row._count._all;
+    }
+  }
+  return { all, unfiled, perFolder };
 }
 
 export async function updateTitle(
