@@ -17,6 +17,11 @@ vi.mock("@/app/_lib/videos/actions", () => ({
   submitLibraryPreferences: vi.fn(),
 }));
 
+vi.mock("@/app/_lib/folders/actions", () => ({
+  assignVideoToFolder: vi.fn(async () => ({ ok: true, folderId: "clvfolder1" })),
+  createFolder: vi.fn(async () => ({ ok: true, videoFolderId: "clvfolder1" })),
+}));
+
 import { fireEvent, render, screen } from "@testing-library/react";
 import { LibraryClient } from "../LibraryClient";
 import type { VideoListItemDTO } from "@/app/_lib/videos/library";
@@ -31,6 +36,7 @@ function makeItem(overrides: Partial<VideoListItemDTO> = {}): VideoListItemDTO {
     durationSeconds: 60,
     containerFormat: "mp4",
     status: "ready",
+    folderId: null,
     thumbnailUrl: "/api/videos/vid_1/thumbnail",
     hasCustomThumbnail: true,
     createdAt: new Date().toISOString(),
@@ -120,5 +126,26 @@ describe("LibraryClient", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: /actions for/i }));
     expect(screen.getByRole("menuitem", { name: "Retry" })).toBeInTheDocument();
+  });
+
+  it("adds_move_to_folder_menu_item", () => {
+    render(
+      <LibraryClient
+        initialItems={[makeItem()]}
+        initialView="grid"
+        initialSort="recent"
+        folders={[
+          {
+            id: "clvfolder1",
+            name: "Courses",
+            createdAt: new Date().toISOString(),
+            videoCount: 0,
+          },
+        ]}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /actions for/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Move to folder" }));
+    expect(screen.getByRole("dialog", { name: "Move to folder" })).toBeInTheDocument();
   });
 });

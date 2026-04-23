@@ -5,6 +5,17 @@ import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testconta
 let container: StartedPostgreSqlContainer | undefined;
 
 export async function setup() {
+  if (process.env.USE_LOCAL_POSTGRES === "1" && process.env.DATABASE_URL) {
+    process.env.SESSION_SECRET =
+      process.env.SESSION_SECRET ?? "test-session-secret-at-least-32-bytes-long";
+    execSync("npx prisma migrate deploy", {
+      stdio: "inherit",
+      env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL },
+      cwd: path.resolve(__dirname, "../.."),
+    });
+    return;
+  }
+
   container = await new PostgreSqlContainer("postgres:16-alpine")
     .withDatabase("videomax_test")
     .withUsername("videomax")

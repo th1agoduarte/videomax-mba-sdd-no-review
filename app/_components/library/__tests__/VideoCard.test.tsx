@@ -12,6 +12,7 @@ const baseItem: VideoListItemDTO = {
   durationSeconds: 1823,
   containerFormat: "mp4",
   status: "ready",
+  folderId: null,
   thumbnailUrl: "/api/videos/vid_1/thumbnail",
   hasCustomThumbnail: true,
   createdAt: "2026-04-15T12:00:00.000Z",

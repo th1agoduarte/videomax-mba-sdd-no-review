@@ -28,6 +28,7 @@ async function seedVideo(
   overrides: Partial<{
     status: string;
     createdAt: Date;
+    folderId: string | null;
   }> = {},
 ) {
   return prisma.video.create({
@@ -39,6 +40,7 @@ async function seedVideo(
       containerFormat: "mp4",
       storagePath: `${userId}/__seed__/source.mp4`,
       status: overrides.status ?? "ready",
+      ...(overrides.folderId !== undefined ? { folderId: overrides.folderId } : {}),
       ...(overrides.createdAt ? { createdAt: overrides.createdAt } : {}),
     },
   });
@@ -96,6 +98,46 @@ describe("libraryRepository - listByUser", () => {
     await seedVideo(owner.id, "cherry");
     const rows = await listByUser(owner.id, "title_asc");
     expect(rows.map((r) => r.title)).toEqual(["Apple", "banana", "cherry"]);
+  });
+
+  it("list_by_user_folder_unfiled_excludes_filed_videos", async () => {
+    const owner = await makeUser("folder-unfiled");
+    const folder = await prisma.folder.create({
+      data: { userId: owner.id, name: "Courses" },
+    });
+    await seedVideo(owner.id, "filed", { folderId: folder.id });
+    await seedVideo(owner.id, "unfiled");
+    const rows = await listByUser(owner.id, "recent", {
+      folderFilter: { kind: "unfiled" },
+    });
+    expect(rows.map((row) => row.title)).toEqual(["unfiled"]);
+  });
+
+  it("list_by_user_folder_by_id_returns_only_that_folder_rows", async () => {
+    const owner = await makeUser("folder-id");
+    const a = await prisma.folder.create({ data: { userId: owner.id, name: "A" } });
+    const b = await prisma.folder.create({ data: { userId: owner.id, name: "B" } });
+    await seedVideo(owner.id, "a-video", { folderId: a.id });
+    await seedVideo(owner.id, "b-video", { folderId: b.id });
+    const rows = await listByUser(owner.id, "recent", {
+      folderFilter: { kind: "folder", folderId: a.id },
+    });
+    expect(rows.map((row) => row.title)).toEqual(["a-video"]);
+  });
+
+  it("count_for_all_filters_returns_aggregates", async () => {
+    const owner = await makeUser("counts");
+    const folder = await prisma.folder.create({
+      data: { userId: owner.id, name: "Courses" },
+    });
+    await seedVideo(owner.id, "filed", { folderId: folder.id });
+    await seedVideo(owner.id, "unfiled");
+    const { countForAllFilters } = await import("../libraryRepository");
+    await expect(countForAllFilters(owner.id)).resolves.toEqual({
+      all: 2,
+      unfiled: 1,
+      perFolder: { [folder.id]: 1 },
+    });
   });
 });
 

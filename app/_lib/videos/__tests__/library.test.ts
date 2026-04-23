@@ -11,6 +11,7 @@ describe("toVideoListItemDTO", () => {
     durationSeconds: null as unknown,
     containerFormat: "mp4",
     status: "ready",
+    folderId: null,
     thumbnailPath: null,
     createdAt: new Date("2026-04-19T12:00:00.000Z"),
   };
@@ -48,5 +49,18 @@ describe("toVideoListItemDTO", () => {
   it("to_video_list_item_dto_serialises_createdAt_as_iso", () => {
     const dto = toVideoListItemDTO(baseRow);
     expect(dto.createdAt).toBe("2026-04-19T12:00:00.000Z");
+  });
+
+  it("to_video_list_item_dto_includes_folder_id", () => {
+    const dto = toVideoListItemDTO({
+      ...baseRow,
+      folderId: "clvfolder0000000000000000",
+    });
+    expect(dto.folderId).toBe("clvfolder0000000000000000");
+  });
+
+  it("to_video_list_item_dto_folder_id_null_when_unfiled", () => {
+    const dto = toVideoListItemDTO({ ...baseRow, folderId: null });
+    expect(dto.folderId).toBeNull();
   });
 });
